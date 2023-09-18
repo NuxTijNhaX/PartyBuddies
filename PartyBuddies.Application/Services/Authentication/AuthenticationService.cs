@@ -19,16 +19,20 @@ public class AuthenticationService : IAuthenticationService
     {
         if (_userRepository.GetUserByEmail(email) is not User user)
         {
-            throw new Exception("User with given email already exists.");
+            throw new Exception("User with given email does not exists.");
         }
+
+        if (user.Password != password)
+        {
+            throw new Exception("Invalid password.");
+        }
+
+        var token = _jwtTokenGenerator.GenerateToken(user);
 
 
         return new AuthenticationResult(
-            Guid.NewGuid(),
-            "FirstName",
-            "LastName",
-            email,
-            "Token");
+            user,
+            token);
     }
 
     public AuthenticationResult Register(
@@ -52,13 +56,10 @@ public class AuthenticationService : IAuthenticationService
 
         _userRepository.AddUser(newUser);
 
-        var token = _jwtTokenGenerator.GenerateToken(newUser.Id, firstName, lastName);
+        var token = _jwtTokenGenerator.GenerateToken(newUser);
 
         return new AuthenticationResult(
-            newUser.Id,
-            firstName,
-            lastName,
-            email,
+            newUser,
             token);
     }
 }
